@@ -1,0 +1,578 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: "IOC IntelliLinen LIVE & AssetOnboarding"
+  description: |
+    API specifications for IntelliLinen Solution.
+
+    The x-api-key should be passed in Header for all API Calls.
+
+    There will be more HTTP responses apart from 200 like 401, 404, 500, 503.
+  contact:
+    name: Vijay Soni
+    email: vijay.soni@sealedair.com
+    url: http://sealedair.com
+host: AWS_HOST
+basePath: /api/v1/intellilinen
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /sites/{site_id}/dispensers:
+    post:
+      description:
+        Get list of all dispensers for the specific site
+      parameters:
+        - in: path
+          name: site_id
+          description: global account id
+          required: true
+          type: string
+          default: "14422"
+        - in: body
+          name: body
+          description: required parameters to update a unit preset
+          required: true
+          schema:
+            $ref: '#/definitions/requestDispensers'
+        - name: x-api-key
+          in: header
+          type: string
+          required: true
+          default: 979dumKkqJoaARJo6W8zobAGdHVDKI9g13zxcXc0
+      responses:
+        200:
+          description: 'Successfully Get all the Dispensers
+                        NOTE: As of now image value should return null value,
+                        but later will change to return the image value'
+          schema:
+            $ref: '#/definitions/responseDispensers200'
+
+  /sites/{site_id}/dispensers/{dispenser_id}/washers:
+    post:
+      description:
+        Get list of all washer detais for the specific dispenser
+      parameters:
+        - in: path
+          name: site_id
+          required: true
+          type: string
+          default: "14422"
+        - in: path
+          name: dispenser_id
+          required: true
+          type: string
+          default: "001ec0f13842"
+        - in: body
+          name: dispensers
+          required: true
+          schema:
+            $ref: '#/definitions/requestDispensers'
+        - in: header
+          name: x-api-key
+          type: string
+          required: true
+          default: 979dumKkqJoaARJo6W8zobAGdHVDKI9g13zxcXc0
+      responses:
+        200:
+          description: 'Successfully Get all the Dispensers.
+                        NOTE: As of now image value should return null value,
+                        but later will change to return the image value.
+                        Washer Status value should be as follows: online, issue, offline'
+          schema:
+            $ref: '#/definitions/responseWashers200'
+
+  # Asset Onboarding API Specs
+  /dispensers/{dispensers_id}/assets:
+    get:
+      description:
+        Get list of all washers for the specified dispenser_mac address
+      parameters:
+        - in: path
+          name: dispensers_id
+          description: dispensers_id to get list of washer data
+          required: true
+          type: string
+          default: "dispenser001"
+        - in: query
+          name: global_account_id
+          description: 'the selected global account id'
+          required: true
+          type: string
+          default: "456"
+        - in: query
+          name: site_id
+          description: 'the selected site id'
+          required: true
+          type: string
+          default: "site001"
+        - name: x-api-key
+          in: header
+          type: string
+          required: true
+          default: 979dumKkqJoaARJo6W8zobAGdHVDKI9g13zxcXc0
+      responses:
+        200:
+          description: 'Successfully Get all the Washers'
+          schema:
+            $ref: '#/definitions/assetResponseWashers200'
+        400:
+          description: 'Could not fetch washers for specified dispenser'
+          schema:
+            $ref: '#/definitions/assetResponseWashers400'
+        204:
+          description: 'no washers associated to specified dispenser'
+          schema:
+            $ref: '#/definitions/assetResponseWashers204'
+
+  /dispensers/{dispensers_id}/assets/{assets_id}:
+    put:
+      description:
+        Update washer data (Same API for updating
+        active/inactive & Update form). For Active/Inactive
+        request object will only contain active = true/false,
+        and for update form the entire object with the
+        new values will be passed in request object.
+      parameters:
+        - in: path
+          name: dispensers_id
+          description: dispensers_id of selected washer data
+          required: true
+          type: string
+          default: "dispenser001"
+        - in: path
+          name: assets_id
+          description: assets_id to update washer data
+          required: true
+          type: string
+          default: "asset001"
+        - in: body
+          name: body
+          description: required parameters to get list of washers for a dispenser.
+          required: true
+          schema:
+            $ref: '#/definitions/assetRequestUpdateWasher'
+        - name: x-api-key
+          in: header
+          type: string
+          required: true
+          default: 979dumKkqJoaARJo6W8zobAGdHVDKI9g13zxcXc0
+      responses:
+        200:
+          description: 'Successfully Get all the Washers'
+          schema:
+            $ref: '#/definitions/assetResponseUpdateWashers200'
+        400:
+          description: 'Could not fetch washerd for specified dispenser'
+          schema:
+            $ref: '#/definitions/assetResponseUpdateWashers400'
+
+    delete:
+      description:
+        delete washers for the specified washer id
+      parameters:
+        - in: path
+          name: dispensers_id
+          description: dispensers_id of selected washer data
+          required: true
+          type: string
+          default: "dispenser001"
+        - in: path
+          name: assets_id
+          description: assets_id to update washer data
+          required: true
+          type: string
+          default: "asset001"
+        - name: x-api-key
+          in: header
+          type: string
+          required: true
+          default: 979dumKkqJoaARJo6W8zobAGdHVDKI9g13zxcXc0
+      responses:
+        200:
+          description: 'Successfully delete the Washer'
+          schema:
+            $ref: '#/definitions/assetResponseDeleteWashers200'
+        400:
+          description: 'Could not fetch washerd for specified dispenser'
+          schema:
+            $ref: '#/definitions/assetResponseDeleteWashers400'
+
+definitions:
+  requestDispensers:
+    type: object
+    required:
+      - filter
+    properties:
+      filters:
+        type: object
+        required:
+          - email
+          - timezone
+        properties:
+          email:
+            type: string
+          timezone:
+            type: string
+
+    example:
+      filters:
+        email: ramnivas.yadav@diversey.com
+        timezone: "Asia/Calcutta"
+
+  responseDispensers200:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        type: object
+        required:
+          - total_production
+          - unit
+          - dispensers
+        properties:
+          total_production:
+            type: integer
+          unit:
+            type: string
+          dispensers:
+            type: array
+            items:
+              type: string
+
+    example:
+      data:
+        total_production: 123
+        unit: "kg"
+        dispensers:
+          - 'dispenser001'
+          - 'dispenser002'
+
+  responseWashers200:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        type: object
+        required:
+          - id
+          - name
+          - alert_infos
+          - washers
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          alert_infos:
+            type: string
+          washers:
+            type: array
+            items:
+              type: object
+              required:
+                - id
+                - name
+                - name_displayed
+                - serial_number
+                - program
+                - start_time
+                - status
+                - message
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                name_displayed:
+                  type: string
+                serial_number:
+                  type: string
+                program:
+                  type: string
+                start_time:
+                  type: string
+                status:
+                  type: string
+                message:
+                  type: array
+                  items:
+                    type: string
+
+    example:
+      data:
+        id: "dda1b1c1"
+        name: "Dispenser 1"
+        alert_infos: "Low chemical"
+        washers:
+          - id: "WWz1y1x1"
+            name: "Electrolux"
+            name_displayed: "Electrolux"
+            serial_number: "901238"
+            program: "Bed Linen"
+            start_time: "13:54"
+            status: "online"
+            message:
+              - "Message 1"
+              - "Message 2"
+          - id: "WWz2y2x2"
+            name: "Miele 1"
+            name_displayed: "Miele 1"
+            serial_number: "258472"
+            program: "Towels"
+            start_time: "12:20"
+            status: "online"
+            message:
+              - "Message 1"
+              - "Ending soon"
+          - id: "WWz3y3x3"
+            name: "Samsung"
+            name_displayed: "Samsung"
+            serial_number: "627348"
+            program: "Towels"
+            start_time: "11:36"
+            status: "offline"
+            message:
+              - "idle for 30min"
+          - id: "WWz4y4x4"
+            name: "Miele 2"
+            name_displayed: "Miele 2"
+            serial_number: "758368"
+            program: "Towels"
+            start_time: "08:13"
+            status: "issue"
+            message:
+              - "error message"
+
+# Assets Onboarding API specs example
+  assetResponseWashers200:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: array
+        required:
+          - id
+          - active
+          - washer_name
+          - capacity
+          - name_displayed
+          - serial_number
+          - make
+          - model
+        properties:
+          id:
+            type: string
+          active:
+            type: boolean
+          washer_name:
+            type: string
+          capacity:
+            type: string
+          name_displayed:
+            type: string
+          serial_number:
+            type: string
+          make:
+            type: string
+          model:
+            type: string
+
+    example:
+      success: true
+      data:
+        - id: "nfdj32n3esn32"
+          active: true
+          washer_name: "Samsung 1"
+          capacity: "40L"
+          name_displayed: "W575S"
+          serial_number: "123X-4H6G"
+          make: "SIEMENS"
+          model: "B1"
+        - id: "sujw554jas"
+          active: false
+          washer_name: "Samsung 2"
+          capacity: "40L"
+          name_displayed: "W575N"
+          serial_number: "XD78-JS90"
+          make: "SIEMENS"
+          model: "B4"
+        - id: "jsud45majf"
+          active: true
+          number: "789"
+          washer_name: "Samsung 3"
+          capacity: "40L"
+          name_displayed: "W558H"
+          serial_number: "1AS9-HG6Y"
+          make: "SIEMENS"
+          model: "B8"
+        - id: "4859hdjeu"
+          active: true
+          washer_name: "Samsung 4"
+          capacity: "40L"
+          name_displayed: “W567F"
+          serial_number: “87YH-KHU2"
+          make: “SIEMENS"
+          model: “B2"
+
+  assetResponseWashers400:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: false
+      data:
+        message: "No dispenser found with provided dispenser id"
+
+  assetResponseWashers204:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: false
+      data:
+        message: "No washer associated to provided dispenser id"
+
+  assetRequestUpdateWasher:
+    type: object
+    required:
+      - active
+      - name_displayed
+      - serial_number
+      - make
+      - model
+    properties:
+      active:
+        type: boolean
+      name_displayed:
+        type: string
+      serial_number:
+        type: string
+      make:
+        type: string
+      model:
+        type: string
+
+    example:
+      active: true
+      name_displayed: "W567F"
+      serial_number: "87YH-KHU2"
+      make: "SIEMENS"
+      model: "B2"
+
+  assetResponseUpdateWashers200:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: true
+      data:
+        message: "Washer updated successfully!!"
+
+  assetResponseUpdateWashers400:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: false
+      data:
+        message: "Washer could not be updated!!"
+
+  assetResponseDeleteWashers200:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: true
+      data:
+        message: "Washer deleted successfully!!"
+
+  assetResponseDeleteWashers400:
+    type: object
+    required:
+      - success
+      - data
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+        required:
+          - message
+        properties:
+          message:
+            type: string
+
+    example:
+      success: false
+      data:
+        message: "Washer could not be deleted!!"
